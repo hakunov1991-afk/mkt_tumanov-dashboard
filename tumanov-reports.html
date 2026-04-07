@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tumanov Group — Отчёты маркетинга</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0d12;--surface:#12161e;--surface2:#181e28;--surface3:#1e2636;
+--border:#1f2937;--border2:#2a3548;
+--text:#e2e8f0;--text2:#8896a8;--text3:#4b5c72;
+--accent:#3b82f6;--accent2:#60a5fa;--green:#10b981;--green2:#34d399;
+--red:#ef4444;--red2:#f87171;--amber:#f59e0b;--purple:#a78bfa;--cyan:#22d3ee;
+--radius:8px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .3s}
+.loader.hide{opacity:0;pointer-events:none}
+.loader-ring{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.loader-text{font-size:13px;color:var(--text2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+header{padding:16px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:10px}
+.logo{font-weight:700;font-size:17px;letter-spacing:-.3px}
+.logo b{color:var(--accent)}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.nav-tabs{display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:3px}
+.nav-tab{padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);border:none;background:none;transition:all .15s;font-family:inherit;white-space:nowrap}
+.nav-tab.active{background:var(--accent);color:#fff}
+.nav-tab:hover:not(.active){color:var(--text2)}
+
+.btn{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn-tg{background:#2AABEE;color:#fff}
+.btn-tg:hover{background:#229ED9}
+.btn-ghost{background:none;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--text2);color:var(--text)}
+
+main{max-width:1320px;margin:0 auto;padding:24px 28px}
+.report-view{display:none}
+.report-view.active{display:block}
+
+.report-header{margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.report-title{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px}
+.report-meta{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:16px}
+
+.section{margin-bottom:28px}
+.section-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.section-num{background:var(--accent);color:#fff;font-size:11px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:var(--surface2)}
+th{text-align:left;padding:9px 12px;color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap}
+tr:hover td{background:rgba(59,130,246,.03)}
+tr.row-total td{font-weight:700;background:var(--surface2);border-top:2px solid var(--border)}
+.mono{font-family:'JetBrains Mono',monospace}
+.right{text-align:right}
+.center{text-align:center}
+
+.trend-up{color:var(--green2)}
+.trend-down{color:var(--red2)}
+.trend-flat{color:var(--text3)}
+
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.funnel-label-col{width:180px;font-size:13px;text-align:right;color:var(--text2);flex-shrink:0}
+.funnel-bar-wrap{flex:1;position:relative;height:32px}
+.funnel-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 12px;font-size:12px;font-weight:600;color:#fff;min-width:40px;transition:width .5s ease}
+.funnel-conv{width:70px;text-align:right;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text2);flex-shrink:0}
+
+.analysis-grid{display:grid;grid-template-columns:200px 1fr;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.analysis-grid .a-label{background:var(--surface2);padding:10px 14px;font-size:12px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border)}
+.analysis-grid .a-value{background:var(--surface);padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);color:var(--text3);min-height:42px}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.b::after{background:var(--accent)}.kpi.g::after{background:var(--green)}.kpi.r::after{background:var(--red)}.kpi.a::after{background:var(--amber)}.kpi.p::after{background:var(--purple)}.kpi.c::after{background:var(--cyan)}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.5px}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.dinput{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:inherit;font-size:13px}
+
+.tg-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.tg-overlay.open{display:flex}
+.tg-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:420px;max-width:90vw}
+.tg-box h3{margin-bottom:14px;font-size:15px}
+.tg-box label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
+.tg-box input,.tg-box select{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:inherit;margin-bottom:10px}
+.tg-box .btns{display:flex;gap:8px;justify-content:flex-end}
+.tg-result{font-size:12px;margin-top:8px}
+
+@media(max-width:768px){
+  header{flex-direction:column;align-items:flex-start}
+  main{padding:16px}
+  .report-header{flex-direction:column;align-items:flex-start}
+  .analysis-grid{grid-template-columns:1fr}
+  .funnel-label-col{width:110px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Загрузка данных из Supabase...</div>
+</div>
+
+<header>
+  <div class="logo">Tumanov<b>Group</b> — Отчёты маркетинга</div>
+  <div class="header-actions">
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-view="daily">&#128202; Ежедневный</button>
+      <button class="nav-tab" data-view="weekly">&#128200; Еженедельный</button>
+      <button class="nav-tab" data-view="monthly">&#128203; Ежемесячный</button>
+    </div>
+    <button class="btn btn-tg" onclick="openTg()">&#9993; Telegram</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ===================== ЕЖЕДНЕВНЫЙ ===================== -->
+<div class="report-view active" id="view-daily">
+  <div class="report-header">
+    <div class="report-title">&#128202; Ежедневный отчёт отдела маркетинга</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="date" id="dailyDate" class="dinput">
+      <button class="btn btn-ghost" onclick="setToday()">Сегодня</button>
+    </div>
+  </div>
+  <div class="report-meta" id="dailyMeta"></div>
+  <div class="kpi-strip" id="dailyKpi"></div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">1</span> Сводный отчёт по каналам (за день)</div>
+    <div class="tbl-wrap"><table id="tblDailyChannels">
+      <thead><tr><th>Канал</th><th class="right">Лиды</th><th class="right">Квал. лиды</th><th class="right">Стоим. квал. лида</th><th class="right">Сделки (win)</th><th class="right">Выручка</th><th>Комментарий</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">2</span> Накопительный итог месяца</div>
+    <div class="tbl-wrap"><table id="tblDailyCumulative">
+      <thead><tr><th>Период</th><th class="right">Всего лидов</th><th class="right">Квал. лиды</th><th class="right">Стоим. квал. лида</th><th class="right">Сделки</th><th class="right">Выручка</th><th class="right">ROMI</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">3</span> Воронка за день</div>
+    <div id="dailyFunnel"></div>
+  </div>
+</div>
+
+<!-- ===================== ЕЖЕНЕДЕЛЬНЫЙ ===================== -->
+<div class="report-view" id="view-weekly">
+  <div class="report-header">
+    <div class="report-title">&#128200; Еженедельный отчёт</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;color:var(--text2)">Неделя:</label>
+      <input type="week" id="weekPicker" class="dinput">
+    </div>
+  </div>
+  <div class="report-meta" id="weeklyMeta"></div>
+  <div class="kpi-strip" id="weeklyKpi"></div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">1</span> Сводная аналитика по каналам</div>
+    <div class="tbl-wrap"><table id="tblWeeklyChannels">
+      <thead><tr><th>Канал</th><th class="right">Лиды</th><th class="right">CPL</th><th class="right">Квал. лиды</th><th class="right">Конв. в сделку</th><th class="right">Сделки</th><th class="right">Выручка</th><th class="right">ROMI</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">2</span> Динамика показателей (неделя к неделе)</div>
+    <div class="tbl-wrap"><table id="tblWeeklyDynamics">
+      <thead><tr><th>Показатель</th><th class="right">Пред. неделя</th><th class="right">Текущая неделя</th><th class="right">Изменение %</th><th class="center">Тренд</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">3</span> Аналитика по воронкам / регионам</div>
+    <div class="tbl-wrap"><table id="tblWeeklyRegions">
+      <thead><tr><th>Воронка</th><th class="right">Лиды</th><th class="right">Квал. лиды</th><th class="right">Сделки</th><th class="right">Выручка</th><th class="right">CPL</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ===================== ЕЖЕМЕСЯЧНЫЙ ===================== -->
+<div class="report-view" id="view-monthly">
+  <div class="report-header">
+    <div class="report-title">&#128203; Ежемесячный отчёт отдела маркетинга</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;color:var(--text2)">Месяц:</label>
+      <input type="month" id="monthPicker" class="dinput">
+    </div>
+  </div>
+  <div class="report-meta" id="monthlyMeta"></div>
+  <div class="kpi-strip" id="monthlyKpi"></div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">1</span> Финансово-маркетинговый итог месяца</div>
+    <div class="tbl-wrap"><table id="tblMonthSummary">
+      <thead><tr><th>Месяц</th><th class="right">Лиды</th><th class="right">CPL</th><th class="right">Квал. лиды</th><th class="right">Консультации</th><th class="right">Сделки</th><th class="right">Выручка</th><th class="right">Средний чек</th><th class="right">ROMI</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">2</span> Эффективность каналов</div>
+    <div class="tbl-wrap"><table id="tblMonthChannels">
+      <thead><tr><th>Канал</th><th class="right">Доля лидов %</th><th class="right">Лиды</th><th class="right">CPL</th><th class="right">Квал. лиды</th><th class="right">Сделки</th><th class="right">Выручка</th><th class="right">ROMI</th><th class="center">Рейтинг</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">3</span> Воронка маркетинга и продаж</div>
+    <div id="monthlyFunnel"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="section-num">4</span> Стратегический анализ и выводы</div>
+    <div class="analysis-grid">
+      <div class="a-label">Основные достижения</div><div class="a-value" id="anAch"></div>
+      <div class="a-label">Проблемные зоны</div><div class="a-value" id="anProb"></div>
+      <div class="a-label">Лучшие каналы</div><div class="a-value" id="anBest"></div>
+      <div class="a-label">Каналы на оптимизацию</div><div class="a-value" id="anWorst"></div>
+      <div class="a-label">Топ менеджер</div><div class="a-value" id="anTopMgr"></div>
+      <div class="a-label">Конверсия воронки</div><div class="a-value" id="anConv"></div>
+      <div class="a-label">Средний чек</div><div class="a-value" id="anAvg"></div>
+      <div class="a-label">Рекомендации</div><div class="a-value" id="anRec"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- TELEGRAM MODAL -->
+<div class="tg-overlay" id="tgOverlay">
+  <div class="tg-box">
+    <h3>&#9993; Отправить отчёт в Telegram</h3>
+    <label>Chat ID</label>
+    <input id="tgChat" placeholder="-1001234567890">
+    <label>Бот-токен</label>
+    <input id="tgToken" value="8498522433:AAFH4huUjxmP0o8JBkG4_aGeB6eMWf68UMw">
+    <label>Какой отчёт</label>
+    <select id="tgReport"><option value="daily">Ежедневный</option><option value="weekly">Еженедельный</option><option value="monthly">Ежемесячный</option></select>
+    <div class="btns">
+      <button class="btn btn-ghost" onclick="closeTg()">Отмена</button>
+      <button class="btn btn-tg" onclick="sendTg()">Отправить</button>
+    </div>
+    <div class="tg-result" id="tgResult"></div>
+  </div>
+</div>
+
+<script>
+const SB='https://nohpohynhcjyirqaxjax.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vaHBvaHluaGNqeWlycWF4amF4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUyMzUwMCwiZXhwIjoyMDkwMDk5NTAwfQ.Tp5biynCSZe0qW0cXU2YrQndj1m6ef0HHFrjb-98faY';
+
+const SRC_MAP={'direct1':'Яндекс.Директ','google1':'Google Ads','vk1':'VK Ads','avito':'Avito','facebook1':'Meta Ads','instagram':'Instagram','telegram':'Telegram Ads','youtube':'YouTube','organic':'Органика','nosource':'CRM','nosource-crm':'CRM','yandex':'Яндекс (орг.)','google':'Google (орг.)','seo':'SEO','partner':'Партнёры'};
+
+let orders=[],visits=[],calls=[];
+
+function hdr(){return{apikey:SK,Authorization:'Bearer '+SK,'Content-Type':'application/json',Prefer:'count=exact'};}
+
+async function fetchAll(t){
+  let a=[],o=0;
+  while(true){
+    const r=await fetch(SB+'/rest/v1/'+t+'?select=*&limit=1000&offset='+o,{headers:hdr()});
+    const d=await r.json();
+    if(!d||!d.length)break;
+    a=a.concat(d);
+    if(d.length<1000)break;
+    o+=1000;
+  }
+  return a;
+}
+
+function normSrc(s){
+  if(!s)return 'Не указан';
+  for(const[mk,mv]of Object.entries(SRC_MAP)){if(s.toLowerCase().startsWith(mk))return mv;}
+  return s.length>30?s.substring(0,30)+'...':s;
+}
+function cf(o,f){return o.custom_fields?o.custom_fields[f]||'':'';}
+function isQual(o){const t=cf(o,'Теги');return t&&(t.includes('SQL')||t.includes('MQL'));}
+function fmt(n){return Math.round(n).toLocaleString('ru');}
+function fmtK(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return fmt(n);}
+function pct(a,b){return b?((a/b)*100).toFixed(1)+'%':'—';}
+function dayStr(d){return d.toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'});}
+function monthStr(d){return d.toLocaleDateString('ru',{month:'long',year:'numeric'});}
+function between(items,field,from,to){return items.filter(i=>{const d=new Date(i[field]);return d>=from&&d<=to;});}
+
+function groupSrc(arr){
+  const m={};arr.forEach(o=>{const s=normSrc(o.source);if(!m[s])m[s]=[];m[s].push(o);});
+  return Object.entries(m).sort((a,b)=>b[1].length-a[1].length);
+}
+
+function stats(arr){
+  const won=arr.filter(o=>o.status_type==='success');
+  const rev=won.reduce((s,o)=>s+(parseFloat(o.price)||0),0);
+  const cost=arr.reduce((s,o)=>s+(parseFloat(o.cost)||0),0);
+  const qual=arr.filter(isQual).length;
+  const progress=arr.filter(o=>o.status_type==='progress').length;
+  const fail=arr.filter(o=>o.status_type==='fail').length;
+  return{total:arr.length,won:won.length,fail,progress,rev,cost,qual,cpl:cost&&arr.length?cost/arr.length:0,cplQ:cost&&qual?cost/qual:0,romi:cost>0?((rev-cost)/cost*100).toFixed(0)+'%':'—',avg:won.length?rev/won.length:0};
+}
+
+function renderKpi(id,items){
+  document.getElementById(id).innerHTML=items.map(i=>
+    '<div class="kpi '+i.c+'"><div class="kpi-label">'+i.l+'</div><div class="kpi-val">'+i.v+'</div>'+(i.s?'<div class="kpi-sub">'+i.s+'</div>':'')+'</div>'
+  ).join('');
+}
+
+function renderFunnel(cid,arr){
+  const s=stats(arr);
+  const steps=[
+    {l:'Лиды',v:s.total,color:'var(--accent)'},
+    {l:'Квалифицированные лиды',v:s.qual,color:'var(--cyan)'},
+    {l:'В работе',v:s.progress,color:'var(--amber)'},
+    {l:'Сделки (выиграно)',v:s.won,color:'var(--green)'},
+    {l:'Проиграно',v:s.fail,color:'var(--red)'}
+  ];
+  const max=Math.max(...steps.map(x=>x.v),1);
+  document.getElementById(cid).innerHTML=steps.map(function(x,i){
+    var prev=i>0?steps[i-1].v:s.total;
+    return '<div class="funnel-row"><div class="funnel-label-col">'+x.l+'</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:'+Math.max((x.v/max)*100,3)+'%;background:'+x.color+'">'+x.v+'</div></div><div class="funnel-conv">'+pct(x.v,prev)+'</div></div>';
+  }).join('');
+}
+
+function trendIcon(val){
+  if(val>2)return '<span class="trend-up">&#9650; +'+val.toFixed(1)+'%</span>';
+  if(val<-2)return '<span class="trend-down">&#9660; '+val.toFixed(1)+'%</span>';
+  return '<span class="trend-flat">&#9654; '+val.toFixed(1)+'%</span>';
+}
+
+/* ============ DAILY ============ */
+function renderDaily(){
+  var dateEl=document.getElementById('dailyDate');
+  var d=dateEl.value?new Date(dateEl.value):new Date();
+  var from=new Date(d);from.setHours(0,0,0,0);
+  var to=new Date(d);to.setHours(23,59,59,999);
+  var dayO=between(orders,'date_create',from,to);
+  var mFrom=new Date(d.getFullYear(),d.getMonth(),1);
+  var cumO=between(orders,'date_create',mFrom,to);
+  var s=stats(dayO),cs=stats(cumO);
+
+  document.getElementById('dailyMeta').textContent=dayStr(d)+' | Сделок за день: '+dayO.length+' | Накопительно за месяц: '+cumO.length;
+
+  renderKpi('dailyKpi',[
+    {l:'Лиды за день',v:s.total,c:'b'},
+    {l:'Квал. лиды',v:s.qual,c:'c'},
+    {l:'Сделки (win)',v:s.won,c:'g'},
+    {l:'Выручка',v:fmtK(s.rev)+' \u20BD',c:'g',s:fmt(s.rev)+' \u20BD'},
+    {l:'CR%',v:pct(s.won,s.total),c:'a'},
+    {l:'Проиграно',v:s.fail,c:'r'}
+  ]);
+
+  var channels=groupSrc(dayO);
+  var totals={total:0,qual:0,won:0,rev:0};
+  var rows=channels.map(function(ch){
+    var src=ch[0],arr=ch[1],st=stats(arr);
+    totals.total+=st.total;totals.qual+=st.qual;totals.won+=st.won;totals.rev+=st.rev;
+    return '<tr><td>'+src+'</td><td class="mono right">'+st.total+'</td><td class="mono right">'+st.qual+'</td><td class="mono right">'+(st.cplQ?fmt(st.cplQ)+' \u20BD':'—')+'</td><td class="mono right">'+st.won+'</td><td class="mono right">'+fmtK(st.rev)+' \u20BD</td><td></td></tr>';
+  }).join('');
+  document.querySelector('#tblDailyChannels tbody').innerHTML=rows+'<tr class="row-total"><td>ИТОГО ЗА ДЕНЬ</td><td class="mono right">'+totals.total+'</td><td class="mono right">'+totals.qual+'</td><td class="mono right">—</td><td class="mono right">'+totals.won+'</td><td class="mono right">'+fmtK(totals.rev)+' \u20BD</td><td></td></tr>';
+
+  document.querySelector('#tblDailyCumulative tbody').innerHTML='<tr><td>'+monthStr(d)+' (накопит.)</td><td class="mono right">'+cs.total+'</td><td class="mono right">'+cs.qual+'</td><td class="mono right">'+(cs.cplQ?fmt(cs.cplQ)+' \u20BD':'—')+'</td><td class="mono right">'+cs.won+'</td><td class="mono right">'+fmtK(cs.rev)+' \u20BD</td><td class="mono right">'+cs.romi+'</td></tr>';
+
+  renderFunnel('dailyFunnel',dayO);
+}
+
+/* ============ WEEKLY ============ */
+function getWeekRange(){
+  var wp=document.getElementById('weekPicker').value;
+  var from,to;
+  if(wp){
+    var parts=wp.split('-W');var y=parseInt(parts[0]),w=parseInt(parts[1]);
+    from=new Date(y,0,1+(w-1)*7);
+    var dow=from.getDay();from.setDate(from.getDate()-(dow===0?6:dow-1));
+    to=new Date(from);to.setDate(to.getDate()+6);
+  }else{
+    var now=new Date();from=new Date(now);
+    var dow2=from.getDay();from.setDate(from.getDate()-(dow2===0?6:dow2-1));
+    to=new Date(from);to.setDate(to.getDate()+6);
+  }
+  from.setHours(0,0,0,0);to.setHours(23,59,59,999);
+  return{from:from,to:to};
+}
+
+function renderWeekly(){
+  var r=getWeekRange(),from=r.from,to=r.to;
+  var prevFrom=new Date(from);prevFrom.setDate(prevFrom.getDate()-7);
+  var prevTo=new Date(from);prevTo.setMilliseconds(-1);
+  var cur=between(orders,'date_create',from,to);
+  var prev=between(orders,'date_create',prevFrom,prevTo);
+  var cs=stats(cur),ps=stats(prev);
+
+  document.getElementById('weeklyMeta').textContent=dayStr(from)+' \u2014 '+dayStr(to)+' | Сделок: '+cur.length;
+
+  renderKpi('weeklyKpi',[
+    {l:'Лиды',v:cs.total,c:'b'},
+    {l:'Квал. лиды',v:cs.qual,c:'c'},
+    {l:'Сделки (win)',v:cs.won,c:'g'},
+    {l:'Выручка',v:fmtK(cs.rev)+' \u20BD',c:'g'},
+    {l:'CR%',v:pct(cs.won,cs.total),c:'a'}
+  ]);
+
+  var channels=groupSrc(cur);
+  var rows=channels.map(function(ch){
+    var src=ch[0],arr=ch[1],st=stats(arr);
+    return '<tr><td>'+src+'</td><td class="mono right">'+st.total+'</td><td class="mono right">'+(st.cpl?fmt(st.cpl)+' \u20BD':'—')+'</td><td class="mono right">'+st.qual+'</td><td class="mono right">'+pct(st.won,st.total)+'</td><td class="mono right">'+st.won+'</td><td class="mono right">'+fmtK(st.rev)+' \u20BD</td><td class="mono right">'+st.romi+'</td></tr>';
+  }).join('');
+  var ts=stats(cur);
+  document.querySelector('#tblWeeklyChannels tbody').innerHTML=rows+'<tr class="row-total"><td>ИТОГО</td><td class="mono right">'+ts.total+'</td><td class="mono right">'+(ts.cpl?fmt(ts.cpl)+' \u20BD':'—')+'</td><td class="mono right">'+ts.qual+'</td><td class="mono right">'+pct(ts.won,ts.total)+'</td><td class="mono right">'+ts.won+'</td><td class="mono right">'+fmtK(ts.rev)+' \u20BD</td><td class="mono right">'+ts.romi+'</td></tr>';
+
+  var metrics=[
+    {name:'Лиды',cur:cs.total,prev:ps.total},
+    {name:'Квал. лиды',cur:cs.qual,prev:ps.qual},
+    {name:'Сделки (win)',cur:cs.won,prev:ps.won},
+    {name:'Выручка',cur:cs.rev,prev:ps.rev},
+    {name:'CR%',cur:cs.total?cs.won/cs.total*100:0,prev:ps.total?ps.won/ps.total*100:0},
+    {name:'ROMI',cur:cs.cost>0?(cs.rev-cs.cost)/cs.cost*100:0,prev:ps.cost>0?(ps.rev-ps.cost)/ps.cost*100:0}
+  ];
+  document.querySelector('#tblWeeklyDynamics tbody').innerHTML=metrics.map(function(m){
+    var change=m.prev?(m.cur-m.prev)/m.prev*100:(m.cur?100:0);
+    var curV=(m.name==='Выручка')?fmtK(m.cur)+' \u20BD':(m.name==='CR%'||m.name==='ROMI')?m.cur.toFixed(1)+'%':fmt(m.cur);
+    var prevV=(m.name==='Выручка')?fmtK(m.prev)+' \u20BD':(m.name==='CR%'||m.name==='ROMI')?m.prev.toFixed(1)+'%':fmt(m.prev);
+    return '<tr><td>'+m.name+'</td><td class="mono right">'+prevV+'</td><td class="mono right">'+curV+'</td><td class="mono right">'+change.toFixed(1)+'%</td><td class="center">'+trendIcon(change)+'</td></tr>';
+  }).join('');
+
+  var byPipeline={};
+  cur.forEach(function(o){var p=cf(o,'Воронка продаж')||'Не указано';if(!byPipeline[p])byPipeline[p]=[];byPipeline[p].push(o);});
+  document.querySelector('#tblWeeklyRegions tbody').innerHTML=Object.entries(byPipeline).sort(function(a,b){return b[1].length-a[1].length;}).map(function(e){
+    var p=e[0],arr=e[1],st=stats(arr);
+    return '<tr><td>'+p+'</td><td class="mono right">'+st.total+'</td><td class="mono right">'+st.qual+'</td><td class="mono right">'+st.won+'</td><td class="mono right">'+fmtK(st.rev)+' \u20BD</td><td class="mono right">'+(st.cpl?fmt(st.cpl)+' \u20BD':'—')+'</td></tr>';
+  }).join('');
+}
+
+/* ============ MONTHLY ============ */
+function renderMonthly(){
+  var mp=document.getElementById('monthPicker').value;
+  var y,m;
+  if(mp){var parts=mp.split('-');y=parseInt(parts[0]);m=parseInt(parts[1]);}
+  else{var n=new Date();y=n.getFullYear();m=n.getMonth()+1;}
+  var from=new Date(y,m-1,1);
+  var to=new Date(y,m,0,23,59,59,999);
+  var mo=between(orders,'date_create',from,to);
+  var s=stats(mo);
+
+  document.getElementById('monthlyMeta').textContent=monthStr(from)+' | Сделок: '+mo.length;
+
+  renderKpi('monthlyKpi',[
+    {l:'Лиды',v:s.total,c:'b'},
+    {l:'Квал. лиды',v:s.qual,c:'c'},
+    {l:'Сделки (win)',v:s.won,c:'g'},
+    {l:'Выручка',v:fmtK(s.rev)+' \u20BD',c:'g',s:fmt(s.rev)+' \u20BD'},
+    {l:'Средний чек',v:fmtK(s.avg)+' \u20BD',c:'p'},
+    {l:'CR%',v:pct(s.won,s.total),c:'a'},
+    {l:'ROMI',v:s.romi,c:'c'}
+  ]);
+
+  var consultations=mo.filter(function(o){var sn=(o.status_name||'').toLowerCase();return sn.includes('zoom')||sn.includes('консульт')||sn.includes('кэв');}).length;
+
+  document.querySelector('#tblMonthSummary tbody').innerHTML='<tr><td>'+monthStr(from)+'</td><td class="mono right">'+s.total+'</td><td class="mono right">'+(s.cpl?fmt(s.cpl)+' \u20BD':'—')+'</td><td class="mono right">'+s.qual+'</td><td class="mono right">'+consultations+'</td><td class="mono right">'+s.won+'</td><td class="mono right">'+fmtK(s.rev)+' \u20BD</td><td class="mono right">'+fmtK(s.avg)+' \u20BD</td><td class="mono right">'+s.romi+'</td></tr>';
+
+  var channels=groupSrc(mo);
+  var maxWon=Math.max.apply(null,channels.map(function(ch){return ch[1].filter(function(o){return o.status_type==='success';}).length;}));
+  if(!maxWon)maxWon=1;
+
+  document.querySelector('#tblMonthChannels tbody').innerHTML=channels.map(function(ch){
+    var src=ch[0],arr=ch[1],st=stats(arr);
+    var share=pct(arr.length,mo.length);
+    var wonCount=arr.filter(function(o){return o.status_type==='success';}).length;
+    var starCount=Math.round((wonCount/maxWon)*5);
+    var rating='';for(var i=0;i<5;i++)rating+=i<starCount?'\u2605':'\u2606';
+    return '<tr><td>'+src+'</td><td class="mono right">'+share+'</td><td class="mono right">'+st.total+'</td><td class="mono right">'+(st.cpl?fmt(st.cpl)+' \u20BD':'—')+'</td><td class="mono right">'+st.qual+'</td><td class="mono right">'+st.won+'</td><td class="mono right">'+fmtK(st.rev)+' \u20BD</td><td class="mono right">'+st.romi+'</td><td class="center" style="color:var(--amber)">'+rating+'</td></tr>';
+  }).join('');
+
+  renderFunnel('monthlyFunnel',mo);
+
+  var best=channels.filter(function(ch){return ch[1].filter(function(o){return o.status_type==='success';}).length>0;}).slice(0,3).map(function(ch){return ch[0];}).join(', ');
+  var worst=channels.slice(-3).map(function(ch){return ch[0];}).join(', ');
+
+  var mgrMap={};
+  mo.forEach(function(o){var mg=cf(o,'Менеджер')||'—';if(!mgrMap[mg])mgrMap[mg]={t:0,w:0};mgrMap[mg].t++;if(o.status_type==='success')mgrMap[mg].w++;});
+  var topMgrs=Object.entries(mgrMap).sort(function(a,b){return b[1].w-a[1].w;});
+  var topMgr=topMgrs[0];
+
+  document.getElementById('anAch').textContent=s.won>0?'Выиграно '+s.won+' сделок на сумму '+fmt(s.rev)+' \u20BD':'Нет выигранных сделок за период';
+  document.getElementById('anProb').textContent=s.fail>s.won?'Проигрыши ('+s.fail+') превышают победы ('+s.won+')':'Соотношение побед/проигрышей в норме';
+  document.getElementById('anBest').textContent=best||'—';
+  document.getElementById('anWorst').textContent=worst||'—';
+  document.getElementById('anTopMgr').textContent=topMgr?topMgr[0]+' ('+topMgr[1].w+' побед из '+topMgr[1].t+' сделок)':'—';
+  document.getElementById('anConv').textContent='Лид \u2192 Сделка: '+pct(s.won,s.total)+' | Лид \u2192 Квал: '+pct(s.qual,s.total);
+  document.getElementById('anAvg').textContent=fmt(s.avg)+' \u20BD';
+  document.getElementById('anRec').textContent='Заполняется вручную или через AI-анализ';
+}
+
+/* ============ NAV ============ */
+document.querySelectorAll('.nav-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    document.querySelectorAll('.report-view').forEach(function(v){v.classList.remove('active');});
+    document.getElementById('view-'+tab.dataset.view).classList.add('active');
+    if(tab.dataset.view==='daily')renderDaily();
+    if(tab.dataset.view==='weekly')renderWeekly();
+    if(tab.dataset.view==='monthly')renderMonthly();
+  });
+});
+
+document.getElementById('dailyDate').addEventListener('change',renderDaily);
+document.getElementById('weekPicker').addEventListener('change',renderWeekly);
+document.getElementById('monthPicker').addEventListener('change',renderMonthly);
+
+function setToday(){
+  document.getElementById('dailyDate').value=new Date().toISOString().split('T')[0];
+  renderDaily();
+}
+
+/* ============ TELEGRAM ============ */
+function openTg(){document.getElementById('tgOverlay').classList.add('open');}
+function closeTg(){document.getElementById('tgOverlay').classList.remove('open');document.getElementById('tgResult').textContent='';}
+
+function buildTgText(type){
+  var arr,label,from,to;
+  if(type==='daily'){
+    var d=document.getElementById('dailyDate').value?new Date(document.getElementById('dailyDate').value):new Date();
+    from=new Date(d);from.setHours(0,0,0,0);to=new Date(d);to.setHours(23,59,59,999);
+    arr=between(orders,'date_create',from,to);label='Ежедневный';
+  }else if(type==='weekly'){
+    var wr=getWeekRange();from=wr.from;to=wr.to;
+    arr=between(orders,'date_create',from,to);label='Еженедельный';
+  }else{
+    var mp=document.getElementById('monthPicker').value;
+    var y2,m2;if(mp){var pp=mp.split('-');y2=parseInt(pp[0]);m2=parseInt(pp[1]);}else{var nn=new Date();y2=nn.getFullYear();m2=nn.getMonth()+1;}
+    from=new Date(y2,m2-1,1);to=new Date(y2,m2,0,23,59,59,999);
+    arr=between(orders,'date_create',from,to);label='Ежемесячный';
+  }
+  var s=stats(arr);
+  var t='\uD83D\uDCCA <b>'+label+' \u043E\u0442\u0447\u0451\u0442 Tumanov Group</b>\n';
+  t+='\uD83D\uDCC5 '+dayStr(from)+' \u2014 '+dayStr(to)+'\n\n';
+  t+='\uD83D\uDCC8 \u041B\u0438\u0434\u044B: <b>'+s.total+'</b>\n';
+  t+='\u2705 \u041A\u0432\u0430\u043B. \u043B\u0438\u0434\u044B: <b>'+s.qual+'</b>\n';
+  t+='\uD83C\uDFC6 \u0412\u044B\u0438\u0433\u0440\u0430\u043D\u043E: <b>'+s.won+'</b> ('+pct(s.won,s.total)+')\n';
+  t+='\u274C \u041F\u0440\u043E\u0438\u0433\u0440\u0430\u043D\u043E: <b>'+s.fail+'</b>\n';
+  t+='\uD83D\uDCB0 \u0412\u044B\u0440\u0443\u0447\u043A\u0430: <b>'+fmt(s.rev)+' \u20BD</b>\n';
+  if(s.won)t+='\uD83D\uDCB5 \u0421\u0440\u0435\u0434\u043D\u0438\u0439 \u0447\u0435\u043A: <b>'+fmt(s.avg)+' \u20BD</b>\n';
+  var channels=groupSrc(arr).slice(0,5);
+  t+='\n\uD83D\uDD0D <b>\u0422\u043E\u043F \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A\u0438:</b>\n';
+  channels.forEach(function(ch){
+    var w=ch[1].filter(function(o){return o.status_type==='success';}).length;
+    t+='  \u2022 '+ch[0]+': '+ch[1].length+' \u043B\u0438\u0434\u043E\u0432, '+w+' \u043F\u043E\u0431\u0435\u0434\n';
+  });
+  var mgrMap={};
+  arr.forEach(function(o){var mg=cf(o,'\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440')||'\u2014';if(!mgrMap[mg])mgrMap[mg]={t:0,w:0};mgrMap[mg].t++;if(o.status_type==='success')mgrMap[mg].w++;});
+  var topMgrs=Object.entries(mgrMap).sort(function(a,b){return b[1].w-a[1].w;}).slice(0,5);
+  t+='\n\uD83D\uDC65 <b>\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440\u044B:</b>\n';
+  topMgrs.forEach(function(e){t+='  \u2022 '+e[0]+': '+e[1].t+' \u0441\u0434\u0435\u043B\u043E\u043A, '+e[1].w+' \u043F\u043E\u0431\u0435\u0434\n';});
+  return t;
+}
+
+async function sendTg(){
+  var chatId=document.getElementById('tgChat').value.trim();
+  var token=document.getElementById('tgToken').value.trim();
+  if(!chatId||!token){document.getElementById('tgResult').innerHTML='<span style="color:var(--red)">Заполни Chat ID и токен</span>';return;}
+  var text=buildTgText(document.getElementById('tgReport').value);
+  try{
+    var r=await fetch('https://api.telegram.org/bot'+token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chatId,text:text,parse_mode:'HTML'})});
+    var d=await r.json();
+    document.getElementById('tgResult').innerHTML=d.ok?'<span style="color:var(--green)">\u2705 Отправлено!</span>':'<span style="color:var(--red)">\u274C '+d.description+'</span>';
+  }catch(e){document.getElementById('tgResult').innerHTML='<span style="color:var(--red)">\u274C '+e.message+'</span>';}
+}
+
+/* ============ INIT ============ */
+async function init(){
+  try{
+    var results=await Promise.all([fetchAll('roistat_orders'),fetchAll('roistat_visits'),fetchAll('roistat_calls')]);
+    orders=results[0];visits=results[1];calls=results[2];
+    var now=new Date();
+    document.getElementById('dailyDate').value=now.toISOString().split('T')[0];
+    var wy=now.getFullYear();
+    var startOfYear=new Date(wy,0,1);
+    var dayOfYear=Math.floor((now-startOfYear)/86400000);
+    var wn=Math.ceil((dayOfYear+startOfYear.getDay()+1)/7);
+    document.getElementById('weekPicker').value=wy+'-W'+String(wn).padStart(2,'0');
+    document.getElementById('monthPicker').value=wy+'-'+String(now.getMonth()+1).padStart(2,'0');
+    renderDaily();
+  }catch(e){
+    document.querySelector('main').innerHTML='<div style="padding:40px;color:var(--red);text-align:center"><h2>Ошибка загрузки данных</h2><p style="margin-top:8px;color:var(--text2)">'+e.message+'</p><p style="margin-top:4px;color:var(--text3)">Убедитесь что файл открыт через https://, а не file://</p></div>';
+  }
+  document.getElementById('loader').classList.add('hide');
+}
+init();
+</script>
+</body>
+</html>
